@@ -7,6 +7,6 @@ one that looks more like a normal C project.
         |- bin          # binaries (elf/archives/firmware)
         |- include      # C headers
         |- obj          # compiled objects
-        |   |- drivers  # compiled objects for uart/i2c/spi/... code
+        |   \- drivers  # compiled objects for uart/i2c/... code from Espressif
         \- src          # source code
         
