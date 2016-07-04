@@ -1,1 +1,8 @@
+# ignore docs/downloads
 downloads
+
+# ignore compiled files
+**/*.o
+**/*.a
+**/*.elf
+**/*.bin

@@ -1,4 +1,4 @@
-# ESP8266 setup: sdk + toolchain
+# ESP8266 sdk + toolchain: my setup
 
 I hate the modular projects structure used by Espressif for their SDK, 
 so I made a makefile to use a more standard C project.

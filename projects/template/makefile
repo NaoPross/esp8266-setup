@@ -129,6 +129,7 @@ $(OBJECTS): $(SOURCES) dirs drivers
 
 ## drivers archive for uart/spi/i2c/...
 drivers: $(DRIVER_OBJECTS)
+	@printf "Creating archive:\t $(DRIVER_ARCHIVE)\n"
 	$(Q) $(AR) cru $(DRIVER_ARCHIVE) $^
 	@printf "\nDrivers compilation completed\n\n"
 
