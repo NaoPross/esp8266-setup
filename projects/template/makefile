@@ -4,7 +4,7 @@
 # PROJECT SETTIGNS
 # ------------------------------------------------------------------------------
 PROJNAME := template
-WORKDIR  := $(shell pwd | sed 's:/projects.*::')
+GITDIR   := $(shell pwd | sed 's:/projects.*::')
 
 ## hide commands
 QUIET    := 1
@@ -19,21 +19,22 @@ endif
 # ------------------------------------------------------------------------------
 ## project structure
 BINDIR := bin
-SRCDIR := src
 INCDIR := include
+LIBDIR := lib
 OBJDIR := obj
+SRCDIR := src
 
-PROJDIRS := $(BINDIR) $(SRCDIR) $(INCDIR) $(OBJDIR) $(OBJDIR)/drivers
+PROJDIRS := $(BINDIR) $(INCDIR) $(LIBDIR) $(OBJDIR)/drivers $(SRCDIR)
 
 # ------------------------------------------------------------------------------
 # TOOLCHAIN LOCATION
 # ------------------------------------------------------------------------------
 ## sdk root (espressif)
-SDK_ROOT := $(WORKDIR)/esp-open-sdk/sdk
+SDK_ROOT := $(GITDIR)/esp-open-sdk/sdk
 ## compiler root (xtensa)
-XTENSA_ROOT := $(WORKDIR)/esp-open-sdk/xtensa-lx106-elf/bin
+XTENSA_ROOT := $(GITDIR)/esp-open-sdk/xtensa-lx106-elf/bin
 ## flash tool (esptool)
-ESPTOOL_ROOT := $(WORKDIR)/esptool-ck
+ESPTOOL_ROOT := $(GITDIR)/esptool-ck
 
 # ------------------------------------------------------------------------------
 # FILES (NAME)
@@ -43,7 +44,7 @@ SOURCES  := $(wildcard $(SRCDIR)/*.c)
 ## objects (automated)
 OBJECTS  := $(patsubst $(SRCDIR)/%.c,$(OBJDIR)/%.o,$(SOURCES))
 ## archive file
-ARCHIVE  := $(BINDIR)/$(PROJNAME).a
+ARCHIVE  := $(LIBDIR)/$(PROJNAME).a
 ## elf (esecutable and linkable format) file
 BINARY   := $(BINDIR)/$(PROJNAME).elf
 ## compiled firmware files (final)
@@ -59,7 +60,7 @@ DRIVER_SOURCES := $(wildcard $(SDK_ROOT)/driver_lib/driver/*.c)
 DRIVER_OBJECTS := $(patsubst $(SDK_ROOT)/driver_lib/driver/%.c,\
 						$(OBJDIR)/drivers/%.o,$(DRIVER_SOURCES))
 ## archive file
-DRIVER_ARCHIVE := $(BINDIR)/drivers.a
+DRIVER_ARCHIVE := $(LIBDIR)/drivers.a
 
 # ------------------------------------------------------------------------------
 # COMPILER LOCATION
@@ -79,9 +80,9 @@ LD_SCRIPT 	:= -T$(SDK_ROOT)/ld/eagle.app.v6.ld
 # libraries used (converted with a wildcard later)
 LIBRARIES 	:= c gcc hal phy pp net80211 lwip wpa main crypto driver
 ## linker flags
-LDFLAGS   	:= -nostdlib -Wl,--no-check-sections \
+LDFLAGS   	:=  -nostdlib -Wl,--no-check-sections \
 				-u call_user_start -Wl,-static \
-				-L$(SDK_ROOT)/lib -L$(BINDIR)
+				-L$(SDK_ROOT)/lib -L$(LIBDIR)
 
 ## C compiler flags
 CFLAGS 		:= 	-I$(INCDIR) -I$(SDK_ROOT)/include \
@@ -93,6 +94,7 @@ CFLAGS 		:= 	-I$(INCDIR) -I$(SDK_ROOT)/include \
 # ------------------------------------------------------------------------------
 # RECIPES / TARGETS
 # ------------------------------------------------------------------------------
+.PHONY: clean dirs drivers
 all: $(FW_00000) $(FW_40000)
 	@printf "\nFirmware compilation completed\n\n"
 
@@ -125,7 +127,16 @@ $(OBJECTS): $(SOURCES) dirs drivers
 	@printf "Compiling source:\t $<\t=>\t$@\n"
 	$(Q) $(CC) $(CFLAGS) -c $< -o $@
 
-.PHONY: clean dirs drivers
+## drivers archive for uart/spi/i2c/...
+drivers: $(DRIVER_OBJECTS)
+	$(Q) $(AR) cru $(DRIVER_ARCHIVE) $^
+	@printf "\nDrivers compilation completed\n\n"
+
+## compile drivers source files
+$(DRIVER_OBJECTS): $(DRIVER_SOURCES)
+	@printf "Compiling driver:\t $<\t=>\t$@\n"
+	$(Q) $(CC) $(CFLAGS) -c $< -o $@
+
 
 ## clean up everything
 clean:
@@ -136,12 +147,3 @@ clean:
 dirs:
 	$(Q) mkdir -p $(PROJDIRS)
 
-## drivers archive for uart/spi/i2c/...
-drivers: $(DRIVER_OBJECTS)
-	$(Q) $(AR) cru $(DRIVER_ARCHIVE) $^
-	@printf "\nDrivers compilation completed\n\n"
-
-## compile drivers source files
-$(DRIVER_OBJECTS): $(DRIVER_SOURCES)
-	@printf "Compiling driver:\t $<\t=>\t$@\n"
-	$(Q) $(CC) $(CFLAGS) -c $< -o $@
