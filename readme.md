@@ -1,7 +1,7 @@
 # ESP8266 sdk + toolchain: my setup
 
 I hate the modular projects structure used by Espressif for their SDK, 
-so I made a makefile to use a more standard C project.
+so I made a makefile to use a more C standard-like folder structure.
 
     - project
         |- bin          # binaries (elf/firmware)
