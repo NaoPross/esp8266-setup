@@ -1,6 +1,9 @@
 # ignore docs/downloads
 downloads
 
+# ignore private files
+**/xor_cypher.h
+
 # ignore compiled files
 **/*.o
 **/*.a

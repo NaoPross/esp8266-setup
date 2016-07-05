@@ -55,9 +55,10 @@ FW_40000 := $(BINDIR)/$(PROJNAME)_0x40000.bin
 ## compile them by hand (see recipe `drivers`)
 
 ## driver source files (uart/spi/...) (automated)
-DRIVER_SOURCES := $(wildcard $(SDK_ROOT)/driver_lib/driver/*.c)
+DRIVER_SOURCES_PATH := $(SDK_ROOT)/driver_lib/driver
+DRIVER_SOURCES := $(wildcard $(DRIVER_SOURCES_PATH)/*.c)
 ## driver objects (automated)
-DRIVER_OBJECTS := $(patsubst $(SDK_ROOT)/driver_lib/driver/%.c,\
+DRIVER_OBJECTS := $(patsubst $(DRIVER_SOURCES_PATH)/%.c,\
 						$(OBJDIR)/drivers/%.o,$(DRIVER_SOURCES))
 ## archive file
 DRIVER_ARCHIVE := $(LIBDIR)/drivers.a
@@ -89,7 +90,7 @@ CFLAGS 		:= 	-I$(INCDIR) -I$(SDK_ROOT)/include \
 				-I$(SDK_ROOT)/driver_lib/include \
 				-Os -g -O2 -Wpointer-arith -Wundef -Werror -Wl,-EL \
 				-fno-inline-functions -nostdlib -mlongcalls \
-				-mtext-section-literals -D__ets__ -DICACHE_FLASH
+				-mtext-section-literals -D__ets__ -DICACHE_FLASH 
 
 # ------------------------------------------------------------------------------
 # RECIPES / TARGETS
@@ -123,8 +124,8 @@ $(ARCHIVE): $(OBJECTS)
 	$(Q) $(AR) cru $@ $^
 
 ## compile source files to objects
-$(OBJECTS): $(SOURCES) dirs drivers
-	@printf "Compiling source:\t $<\t=>\t$@\n"
+$(OBJECTS): $(OBJDIR)/%.o : $(SRCDIR)/%.c $(SOURCES) dirs drivers
+	@printf "Compiling source:\t $<  =>  $@\n"
 	$(Q) $(CC) $(CFLAGS) -c $< -o $@
 
 ## drivers archive for uart/spi/i2c/...
@@ -134,10 +135,9 @@ drivers: $(DRIVER_OBJECTS)
 	@printf "\nDrivers compilation completed\n\n"
 
 ## compile drivers source files
-$(DRIVER_OBJECTS): $(DRIVER_SOURCES)
-	@printf "Compiling driver:\t $<\t=>\t$@\n"
+$(DRIVER_OBJECTS): $(OBJDIR)/drivers/%.o : $(DRIVER_SOURCES_PATH)/%.c $(DRIVER_SOURCES)
+	@printf "Compiling driver:\t $<  =>  $@\n"
 	$(Q) $(CC) $(CFLAGS) -c $< -o $@
-
 
 ## clean up everything
 clean:
@@ -147,4 +147,3 @@ clean:
 ## generate project sturcture
 dirs:
 	$(Q) mkdir -p $(PROJDIRS)
-
